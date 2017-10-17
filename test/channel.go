@@ -239,8 +239,13 @@ func (c *ChanInt) slideBuffer() bool {
 			}
 		}
 		if atomic.LoadUint64(&c.begin) < slowestCursor && slowestCursor <= atomic.LoadUint64(&c.end) {
-			atomic.StoreUint64(&c.begin, slowestCursor)
-			atomic.StoreUint64(&c.end, slowestCursor+c.mod+1)
+			if c.mod < 16 {
+				atomic.AddUint64(&c.begin, 1)
+				atomic.AddUint64(&c.end, 1)
+			} else {
+				atomic.StoreUint64(&c.begin, slowestCursor)
+				atomic.StoreUint64(&c.end, slowestCursor+c.mod+1)
+			}
 		} else {
 			slowestCursor = parked
 		}
