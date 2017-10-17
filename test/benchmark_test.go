@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-// jig -r && go test -run=XXX -bench=Chan -cpu=1,2,3,4,5,6,7,8 -timeout=1h -count=10
-
 func BenchmarkFanInOut_Chan_NxN(b *testing.B) {
 	PAR := runtime.GOMAXPROCS(0)
 	NUM := b.N
