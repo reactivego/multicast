@@ -2,7 +2,7 @@
 // multicasting channel. Because the generics definitions in 'channel' are only
 // recognized by Just-in-time Generics for Go, you will need to install the jig
 // tool (https://github.com/reactivego/jig/).
-
+//
 // Unlike native Go channels, messages send to this channel are multicasted to
 // all receivers. A new endpoint created while the channel is operational can
 // choose to receive messages previously sent by specifying a replay count
