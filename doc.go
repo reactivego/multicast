@@ -1,4 +1,4 @@
-// Library channel provides a (jig) generic implementation of a multisender,
+// Library channel provides a Just-in-time Generics (jig) implementation of a multisender,
 // multicasting channel. Because the generics definitions in 'channel' are only
 // recognized by Just-in-time Generics for Go, you will need to install the jig
 // tool (https://github.com/reactivego/jig/).
