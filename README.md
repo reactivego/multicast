@@ -27,3 +27,6 @@ NewChan(128,8)
 ```
 
 Because the generics in this library are only recognized by [Just-in-time Generics for Go](https://github.com/reactivego/jig/), you will need to install it.
+
+## License
+This library is licensed under the terms of the MIT License. See [LICENSE](LICENSE) file in this repository for copyright notice and exact wording.
