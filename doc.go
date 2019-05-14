@@ -28,7 +28,7 @@
 // the performance of our channel implementation against Go's native channels,
 // there are issues with feature mismatch. These channels have very
 // different semantics and strenghts. I've tried to create benchmarks that
-// perform the same ammount of work in both implementations.
+// perform the same amount of work in both implementations.
 //
 // Initially I used interface{} as the message type. Then, later switched to
 // int after I converted the library to a generics library and I could generate
@@ -103,9 +103,9 @@
 // 	ok  	github.com/reactivego/channel/test	31.698s
 //
 // I really had to work hard to get performance to an acceptable level. Started
-// out an order of magnitude slower than native Go, as the ammount of contention
+// out an order of magnitude slower than native Go, as the amount of contention
 // for goroutines trying to gain write access to the channel was crippling
-// performance. Eventually,I changed the solution to hand out write slots to the
+// performance. Eventually, I changed the solution to hand out write slots to the
 // concurrent senders and have one of the receiver goroutines consolidate and
 // commit the data by looking for contiguous sequences of slots marked as
 // updated by their sender goroutines. So data is ordered on slot hand-out time

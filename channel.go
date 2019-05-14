@@ -64,7 +64,7 @@ const (
 //jig:needs ChanPadding, ChanState
 
 // ChanFoo is a fast, concurrent multi-(casting,sending,receiving) buffered
-// channel. It is implemented using only syc/atomic operations. Spinlocks using
+// channel. It is implemented using only sync/atomic operations. Spinlocks using
 // runtime.Gosched() are used in situations where goroutines are waiting or
 // contending for resources.
 type ChanFoo struct {
@@ -189,7 +189,7 @@ func (c *ChanFoo) Closed() bool {
 //jig:needs endpoints<Foo>, Chan<Foo> slideBuffer
 
 // FastSend can be used to send values to the channel from a single goroutine.
-// Also this does not record the time at which a message was send so maxAge
+// Also, this does not record the time a message was sent, so the maxAge value
 // passed to Range will be ignored.
 func (c *ChanFoo) FastSend(value foo) {
 	for c.commit == c.end {
