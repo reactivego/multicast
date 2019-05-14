@@ -1,7 +1,6 @@
 package channel
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"runtime"
@@ -12,9 +11,13 @@ import (
 
 //jig:template ErrOutOfEndpoints
 
+type ChannelError string
+
+func (e ChannelError) Error() string { return string(e) }
+
 // ErrOutOfEndpoints is returned by NewEndpoint when the maximum number of
 // endpoints has already been created.
-var ErrOutOfEndpoints = errors.New("out of endpoints")
+const ErrOutOfEndpoints = ChannelError("out of endpoints")
 
 //jig:template ChanPadding
 
