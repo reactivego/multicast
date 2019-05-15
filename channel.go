@@ -2,7 +2,7 @@
 
 //go:generate jig --regen
 
-package test
+package channel
 
 import (
 	"fmt"
@@ -62,14 +62,14 @@ const (
 	ReplayAll uint64 = math.MaxUint64
 )
 
-//jig:name ChanInt
+//jig:name Chan
 
-// ChanInt is a fast, concurrent multi-(casting,sending,receiving) buffered
+// Chan is a fast, concurrent multi-(casting,sending,receiving) buffered
 // channel. It is implemented using only sync/atomic operations. Spinlocks using
 // runtime.Gosched() are used in situations where goroutines are waiting or
 // contending for resources.
-type ChanInt struct {
-	buffer		[]int
+type Chan struct {
+	buffer		[]interface{}
 	_________a	pad40
 	begin		uint64
 	_________b	pad56
@@ -79,7 +79,7 @@ type ChanInt struct {
 	_________d	pad56
 	mod		uint64
 	_________e	pad56
-	endpoints	endpointsInt
+	endpoints	endpoints
 
 	err		error
 	____________f	pad48
@@ -99,8 +99,8 @@ type ChanInt struct {
 	_________________l	pad56
 }
 
-type endpointsInt struct {
-	entry			[]EndpointInt
+type endpoints struct {
+	entry			[]Endpoint
 	len			uint32
 	endpointsActivity	uint32	// idling, enumerating, creating
 	________		pad32
@@ -116,9 +116,9 @@ func (e ChannelError) Error() string	{ return string(e) }
 // endpoints has already been created.
 const ErrOutOfEndpoints = ChannelError("out of endpoints")
 
-//jig:name endpointsInt
+//jig:name endpoints
 
-func (e *endpointsInt) NewForChanInt(c *ChanInt, keep uint64) (*EndpointInt, error) {
+func (e *endpoints) NewForChan(c *Chan, keep uint64) (*Endpoint, error) {
 	for !atomic.CompareAndSwapUint32(&e.endpointsActivity, idling, creating) {
 		runtime.Gosched()
 	}
@@ -143,7 +143,7 @@ func (e *endpointsInt) NewForChanInt(c *ChanInt, keep uint64) (*EndpointInt, err
 		return nil, ErrOutOfEndpoints
 	}
 	ep := &e.entry[e.len]
-	ep.ChanInt = c
+	ep.Chan = c
 	ep.cursor = start
 	ep.endpointState = atomic.LoadUint64(&c.channelState)
 	ep.lastActive = time.Now()
@@ -151,7 +151,7 @@ func (e *endpointsInt) NewForChanInt(c *ChanInt, keep uint64) (*EndpointInt, err
 	return ep, nil
 }
 
-func (e *endpointsInt) Access(access func(*endpointsInt)) bool {
+func (e *endpoints) Access(access func(*endpoints)) bool {
 	contention := false
 	for !atomic.CompareAndSwapUint32(&e.endpointsActivity, idling, enumerating) {
 		runtime.Gosched()
@@ -162,9 +162,9 @@ func (e *endpointsInt) Access(access func(*endpointsInt)) bool {
 	return !contention
 }
 
-//jig:name NewChanInt
+//jig:name NewChan
 
-// NewChanInt creates a new channel. Use e.g. NewChanInt to create a channel of
+// NewChan creates a new channel. Use e.g. NewChanInt to create a channel of
 // integer values and use NewChan to create a channel of interface{}. The
 // parameters bufferCapacity and endpointCapacity determine the size of the
 // message buffer and maximum number of concurrent receiving endpoints
@@ -173,36 +173,36 @@ func (e *endpointsInt) Access(access func(*endpointsInt)) bool {
 // Note that bufferCapacity is always scaled up to a power of 2 so e.g.
 // specifying 400 will create a buffer of 512 (2^9). Also because of this a
 // bufferCapacity of 0 is scaled up to 1 (2^0).
-func NewChanInt(bufferCapacity int, endpointCapacity int) *ChanInt {
+func NewChan(bufferCapacity int, endpointCapacity int) *Chan {
 
 	size := uint64(1) << uint(math.Ceil(math.Log2(float64(bufferCapacity))))
-	c := &ChanInt{
+	c := &Chan{
 		end:		size,
 		mod:		size - 1,
-		buffer:		make([]int, size),
+		buffer:		make([]interface{}, size),
 		start:		time.Now(),
 		written:	make([]int64, size),
-		endpoints: endpointsInt{
-			entry: make([]EndpointInt, endpointCapacity),
+		endpoints: endpoints{
+			entry: make([]Endpoint, endpointCapacity),
 		},
 	}
 	c.receivers = sync.NewCond(c)
 	return c
 }
 
-// Lock, empty method so we can pass *ChanInt to sync.NewCond as a Locker.
-func (c *ChanInt) Lock()	{}
+// Lock, empty method so we can pass *Chan to sync.NewCond as a Locker.
+func (c *Chan) Lock()	{}
 
-// Unlock, empty method so we can pass *ChanInt to sync.NewCond as a Locker.
-func (c *ChanInt) Unlock()	{}
+// Unlock, empty method so we can pass *Chan to sync.NewCond as a Locker.
+func (c *Chan) Unlock()	{}
 
-//jig:name EndpointInt
+//jig:name Endpoint
 
-// EndpointInt is returned by a call to NewEndpoint on the channel. Every
+// Endpoint is returned by a call to NewEndpoint on the channel. Every
 // endpoint should be used by only a single goroutine, so no sharing between
 // goroutines.
-type EndpointInt struct {
-	*ChanInt
+type Endpoint struct {
+	*Chan
 	_____________a	pad56
 	cursor		uint64
 	_____________b	pad56
@@ -214,18 +214,11 @@ type EndpointInt struct {
 	_____________e	pad56
 }
 
-//jig:name ChanIntClosed
+//jig:name ChanslideBuffer
 
-// Closed returns true when the channel was closed using the Close method.
-func (c *ChanInt) Closed() bool {
-	return atomic.LoadUint64(&c.channelState) >= closed
-}
-
-//jig:name ChanIntslideBuffer
-
-func (c *ChanInt) slideBuffer() bool {
+func (c *Chan) slideBuffer() bool {
 	slowestCursor := parked
-	spinlock := c.endpoints.Access(func(endpoints *endpointsInt) {
+	spinlock := c.endpoints.Access(func(endpoints *endpoints) {
 		for i := uint32(0); i < endpoints.len; i++ {
 			cursor := atomic.LoadUint64(&endpoints.entry[i].cursor)
 			if cursor < slowestCursor {
@@ -255,12 +248,12 @@ func (c *ChanInt) slideBuffer() bool {
 	return true
 }
 
-//jig:name ChanIntFastSend
+//jig:name ChanFastSend
 
 // FastSend can be used to send values to the channel from a single goroutine.
 // Also, this does not record the time a message was sent, so the maxAge value
 // passed to Range will be ignored.
-func (c *ChanInt) FastSend(value int) {
+func (c *Chan) FastSend(value interface{}) {
 	for c.commit == c.end {
 		if !c.slideBuffer() {
 			return
@@ -271,43 +264,10 @@ func (c *ChanInt) FastSend(value int) {
 	c.receivers.Broadcast()
 }
 
-//jig:name ChanIntNewEndpoint
-
-// NewEndpoint will create a new channel endpoint that can be used to receive
-// from the channel. The argument keep specifies how many entries of the
-// existing channel buffer to keep.
-//
-// After Close is called on the channel, any endpoints created after that
-// will still receive the number of messages as indicated in the keep parameter
-// and then subsequently the close.
-//
-// An endpoint that is canceled or read until it is exhausted (after channel was
-// closed) will be reused by NewEndpoint.
-func (c *ChanInt) NewEndpoint(keep uint64) (*EndpointInt, error) {
-	return c.endpoints.NewForChanInt(c, keep)
-}
-
-//jig:name ChanIntClose
-
-// Close will close the channel. Pass in an error or nil. Endpoints  continue to
-// receive data until the buffer is empty. Only then will the close notification
-// be delivered to the Range function.
-func (c *ChanInt) Close(err error) {
-	if atomic.CompareAndSwapUint64(&c.channelState, active, closed) {
-		c.err = err
-		c.endpoints.Access(func(endpoints *endpointsInt) {
-			for i := uint32(0); i < endpoints.len; i++ {
-				atomic.CompareAndSwapUint64(&endpoints.entry[i].endpointState, active, closed)
-			}
-		})
-	}
-	c.receivers.Broadcast()
-}
-
-//jig:name ChanIntSend
+//jig:name ChanSend
 
 // Send can be used by concurrent goroutines to send values to the channel.
-func (c *ChanInt) Send(value int) {
+func (c *Chan) Send(value interface{}) {
 	write := atomic.AddUint64(&c.write, 1) - 1
 	for write >= atomic.LoadUint64(&c.end) {
 		if !c.slideBuffer() {
@@ -323,7 +283,47 @@ func (c *ChanInt) Send(value int) {
 	c.receivers.Broadcast()
 }
 
-//jig:name EndpointIntRange
+//jig:name ChanClose
+
+// Close will close the channel. Pass in an error or nil. Endpoints  continue to
+// receive data until the buffer is empty. Only then will the close notification
+// be delivered to the Range function.
+func (c *Chan) Close(err error) {
+	if atomic.CompareAndSwapUint64(&c.channelState, active, closed) {
+		c.err = err
+		c.endpoints.Access(func(endpoints *endpoints) {
+			for i := uint32(0); i < endpoints.len; i++ {
+				atomic.CompareAndSwapUint64(&endpoints.entry[i].endpointState, active, closed)
+			}
+		})
+	}
+	c.receivers.Broadcast()
+}
+
+//jig:name ChanClosed
+
+// Closed returns true when the channel was closed using the Close method.
+func (c *Chan) Closed() bool {
+	return atomic.LoadUint64(&c.channelState) >= closed
+}
+
+//jig:name ChanNewEndpoint
+
+// NewEndpoint will create a new channel endpoint that can be used to receive
+// from the channel. The argument keep specifies how many entries of the
+// existing channel buffer to keep.
+//
+// After Close is called on the channel, any endpoints created after that
+// will still receive the number of messages as indicated in the keep parameter
+// and then subsequently the close.
+//
+// An endpoint that is canceled or read until it is exhausted (after channel was
+// closed) will be reused by NewEndpoint.
+func (c *Chan) NewEndpoint(keep uint64) (*Endpoint, error) {
+	return c.endpoints.NewForChan(c, keep)
+}
+
+//jig:name EndpointRange
 
 // Range will call the passed in foreach function with all the messages in
 // the buffer, followed by all the messages received. When the foreach
@@ -334,7 +334,7 @@ func (c *ChanInt) Send(value int) {
 // When the channel is closed, eventually when the buffer is exhausted the close
 // with optional error will be notified by calling foreach one last time with
 // the closed parameter set to true.
-func (e *EndpointInt) Range(foreach func(value int, err error, closed bool) bool, maxAge time.Duration) {
+func (e *Endpoint) Range(foreach func(value interface{}, err error, closed bool) bool, maxAge time.Duration) {
 	e.lastActive = time.Now()
 	for {
 		commit := e.commitData()
@@ -359,7 +359,7 @@ func (e *EndpointInt) Range(foreach func(value int, err error, closed bool) bool
 					runtime.Gosched()
 				} else if now.Before(e.lastActive.Add(250 * time.Millisecond)) {
 					if atomic.CompareAndSwapUint64(&e.endpointState, closed, closed) {
-						var zero int
+						var zero interface{}
 						foreach(zero, e.err, true)
 						atomic.StoreUint64(&e.cursor, parked)
 						return
@@ -394,9 +394,19 @@ func (e *EndpointInt) Range(foreach func(value int, err error, closed bool) bool
 	}
 }
 
-//jig:name ChanIntcommitData
+//jig:name EndpointCancel
 
-func (c *ChanInt) commitData() uint64 {
+// Cancel cancels the endpoint, making it available to be reused when
+// NewEndpoint is called on the channel. When canceled the foreach function
+// passed to Range is not notified, instead just never called again.
+func (e *Endpoint) Cancel() {
+	atomic.CompareAndSwapUint64(&e.endpointState, active, canceled)
+	e.receivers.Broadcast()
+}
+
+//jig:name ChancommitData
+
+func (c *Chan) commitData() uint64 {
 	commit := atomic.LoadUint64(&c.commit)
 	if commit >= atomic.LoadUint64(&c.write) {
 		return commit
