@@ -1,5 +1,5 @@
-// Package channel provides a multi-sender merging&multicasting channel.
-// It is a specialization of the generics library
+// Package channel provides the Chan type that can multicast and replay messages
+// to multiple receivers. It is a specialization of the generics library
 // github.com/reactivego/channel/jig on the emtpy interface type.
 // 
 // The channel can be used by multiple senders to simultaneously send messages
@@ -23,9 +23,9 @@
 // 	functionality that is needed from the generics library. See the Example
 //	below this text for the actual source of example_test.go.
 //
-// 	By running the jig command the code to allow the example program to compile
-//	is generated into the file [channel.go]. That code then forms the actual
-//	channel package.
+// 	Generate the package by running the jig command. The code needed to compile
+//	the example is generated into the file [channel.go]. That file then contains
+//	the code for the actual channel package.
 //
 //	$ go get github.com/reactivego/channel/jig
 //	$ cd $GOPATH/src/github.com/reactivego/channel
