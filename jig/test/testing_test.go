@@ -60,8 +60,7 @@ func TestChanMaxAge(t *testing.T) {
 		}
 		return true
 	}
-
-	ep.Range(count, 50*time.Millisecond)
+	ep.Range(count,/*49.5ms*/ 99*(time.Millisecond/2))
 }
 
 func TestChan_FanInOut_integrity(t *testing.T) {
