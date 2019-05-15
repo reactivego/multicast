@@ -1,7 +1,8 @@
-// Library channel provides a Just-in-time Generics (jig) implementation of a multisender,
-// multicasting channel. Because the generics definitions in 'channel' are only
-// recognized by Just-in-time Generics for Go, you will need to install the jig
-// tool (https://github.com/reactivego/jig/).
+// Package jig is a Just-in-time Generics (jig) library. It contains a generic 
+// implementation of a Channel. This supports multiple concurrent senders and
+// also multicasting to more than one receiver. Additionally code that receives
+// from the channel can specify to receive only messages younger a given
+// maximum age. Install https://github.com/reactivego/jig/ to use the library.
 //
 // Unlike native Go channels, messages send to this channel are multicasted to
 // all receivers. A new endpoint created while the channel is operational can
