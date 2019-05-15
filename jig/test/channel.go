@@ -214,13 +214,6 @@ type EndpointInt struct {
 	_____________e	pad56
 }
 
-//jig:name ChanIntClosed
-
-// Closed returns true when the channel was closed using the Close method.
-func (c *ChanInt) Closed() bool {
-	return atomic.LoadUint64(&c.channelState) >= closed
-}
-
 //jig:name ChanIntslideBuffer
 
 func (c *ChanInt) slideBuffer() bool {
@@ -255,36 +248,23 @@ func (c *ChanInt) slideBuffer() bool {
 	return true
 }
 
-//jig:name ChanIntFastSend
+//jig:name ChanIntSend
 
-// FastSend can be used to send values to the channel from a single goroutine.
-// Also, this does not record the time a message was sent, so the maxAge value
-// passed to Range will be ignored.
-func (c *ChanInt) FastSend(value int) {
-	for c.commit == c.end {
+// Send can be used by concurrent goroutines to send values to the channel.
+func (c *ChanInt) Send(value int) {
+	write := atomic.AddUint64(&c.write, 1) - 1
+	for write >= atomic.LoadUint64(&c.end) {
 		if !c.slideBuffer() {
 			return
 		}
 	}
-	c.buffer[c.commit&c.mod] = value
-	atomic.AddUint64(&c.commit, 1)
+	c.buffer[write&c.mod] = value
+	updated := time.Since(c.start).Nanoseconds()
+	if updated == 0 {
+		panic("clock failure; zero duration measured")
+	}
+	atomic.StoreInt64(&c.written[write&c.mod], updated<<1+1)
 	c.receivers.Broadcast()
-}
-
-//jig:name ChanIntNewEndpoint
-
-// NewEndpoint will create a new channel endpoint that can be used to receive
-// from the channel. The argument keep specifies how many entries of the
-// existing channel buffer to keep.
-//
-// After Close is called on the channel, any endpoints created after that
-// will still receive the number of messages as indicated in the keep parameter
-// and then subsequently the close.
-//
-// An endpoint that is canceled or read until it is exhausted (after channel was
-// closed) will be reused by NewEndpoint.
-func (c *ChanInt) NewEndpoint(keep uint64) (*EndpointInt, error) {
-	return c.endpoints.NewForChanInt(c, keep)
 }
 
 //jig:name ChanIntClose
@@ -304,22 +284,42 @@ func (c *ChanInt) Close(err error) {
 	c.receivers.Broadcast()
 }
 
-//jig:name ChanIntSend
+//jig:name ChanIntNewEndpoint
 
-// Send can be used by concurrent goroutines to send values to the channel.
-func (c *ChanInt) Send(value int) {
-	write := atomic.AddUint64(&c.write, 1) - 1
-	for write >= atomic.LoadUint64(&c.end) {
+// NewEndpoint will create a new channel endpoint that can be used to receive
+// from the channel. The argument keep specifies how many entries of the
+// existing channel buffer to keep.
+//
+// After Close is called on the channel, any endpoints created after that
+// will still receive the number of messages as indicated in the keep parameter
+// and then subsequently the close.
+//
+// An endpoint that is canceled or read until it is exhausted (after channel was
+// closed) will be reused by NewEndpoint.
+func (c *ChanInt) NewEndpoint(keep uint64) (*EndpointInt, error) {
+	return c.endpoints.NewForChanInt(c, keep)
+}
+
+//jig:name ChanIntClosed
+
+// Closed returns true when the channel was closed using the Close method.
+func (c *ChanInt) Closed() bool {
+	return atomic.LoadUint64(&c.channelState) >= closed
+}
+
+//jig:name ChanIntFastSend
+
+// FastSend can be used to send values to the channel from a single goroutine.
+// Also, this does not record the time a message was sent, so the maxAge value
+// passed to Range will be ignored.
+func (c *ChanInt) FastSend(value int) {
+	for c.commit == c.end {
 		if !c.slideBuffer() {
 			return
 		}
 	}
-	c.buffer[write&c.mod] = value
-	updated := time.Since(c.start).Nanoseconds()
-	if updated == 0 {
-		panic("clock failure; zero duration measured")
-	}
-	atomic.StoreInt64(&c.written[write&c.mod], updated<<1+1)
+	c.buffer[c.commit&c.mod] = value
+	atomic.AddUint64(&c.commit, 1)
 	c.receivers.Broadcast()
 }
 

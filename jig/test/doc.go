@@ -4,6 +4,6 @@
 // 	jig -r && go test -run=XXX -bench=Chan -cpu=1,2,3,4,5,6,7,8 -timeout=1h -count=10
 package test
 
-import _ "github.com/reactivego/channel"
+import _ "github.com/reactivego/channel/jig"
 
 const BUFSIZE = 512
