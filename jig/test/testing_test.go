@@ -42,6 +42,7 @@ func TestChanMaxAge(t *testing.T) {
 
 	start := time.Now()
 	for i := 0; i < 100; i++ {
+		// wait until next millisecond.
 		for time.Since(start) < time.Duration(i)*time.Millisecond {
 			runtime.Gosched()
 		}
