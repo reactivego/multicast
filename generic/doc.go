@@ -1,4 +1,4 @@
-// Package jig is a Just-in-time Generics (jig) library. It contains
+// Package multicast is a Just-in-time Generics (jig) library. It contains
 // a generic implementation of a special Channel type. This Channel supports
 // multiple concurrent senders and also multicasting to more than one receiver.
 // Additionally code that receives from the channel can specify to receive 
@@ -46,7 +46,7 @@
 // 	Mac:test $ go test -run=XXX -bench=FanOut.Chan -cpu=1,2,3,4,5,6,7,8
 // 	goos: darwin
 // 	goarch: amd64
-// 	pkg: github.com/reactivego/channel/test
+// 	pkg: github.com/reactivego/multicast/generic/test
 // 	BenchmarkFanOut_Chan_1xN     	30000000	        38.3 ns/op
 // 	BenchmarkFanOut_Chan_1xN-2   	50000000	        34.7 ns/op
 // 	BenchmarkFanOut_Chan_1xN-3   	50000000	        27.3 ns/op
@@ -56,7 +56,7 @@
 // 	BenchmarkFanOut_Chan_1xN-7   	50000000	        27.9 ns/op
 // 	BenchmarkFanOut_Chan_1xN-8   	50000000	        27.2 ns/op
 // 	PASS
-// 	ok  	github.com/reactivego/channel/test	11.880s
+// 	ok  	github.com/reactivego/multicast/generic/test	11.880s
 //
 // From the results we can see that even for 8 concurrent receivers, the
 // receiving goroutines are not contending for access to the data.
@@ -68,7 +68,7 @@
 // 	Mac:test $ go test -run=XXX -bench=FanOut.Go -cpu=1,2,3,4,5,6,7,8
 // 	goos: darwin
 // 	goarch: amd64
-// 	pkg: github.com/reactivego/channel/test
+// 	pkg: github.com/reactivego/multicast/generic/test
 // 	BenchmarkFanOut_Go_1xN     	20000000	        61.0 ns/op
 // 	BenchmarkFanOut_Go_1xN-2   	20000000	        86.9 ns/op
 // 	BenchmarkFanOut_Go_1xN-3   	20000000	        99.8 ns/op
@@ -78,7 +78,7 @@
 // 	BenchmarkFanOut_Go_1xN-7   	10000000	       204 ns/op
 // 	BenchmarkFanOut_Go_1xN-8   	10000000	       210 ns/op
 // 	PASS
-// 	ok  	github.com/reactivego/channel/test	16.440s
+// 	ok  	github.com/reactivego/multicast/generic/test	16.440s
 //
 // What we see here is the sender slowing down as it is pumping the same
 // information into increasingly more separate channels.
@@ -92,7 +92,7 @@
 // 	Mac:test $ go test -run=XXX -bench=FanIn.Chan -cpu=1,2,3,4,5,6,7,8
 // 	goos: darwin
 // 	goarch: amd64
-// 	pkg: github.com/reactivego/channel/test
+// 	pkg: github.com/reactivego/multicast/generic/test
 // 	BenchmarkFanIn_Chan_Nx1     	20000000	        78.0 ns/op
 // 	BenchmarkFanIn_Chan_Nx1-2   	20000000	        89.6 ns/op
 // 	BenchmarkFanIn_Chan_Nx1-3   	20000000	        75.2 ns/op
@@ -102,7 +102,7 @@
 // 	BenchmarkFanIn_Chan_Nx1-7   	20000000	        63.7 ns/op
 // 	BenchmarkFanIn_Chan_Nx1-8   	20000000	        68.7 ns/op
 // 	PASS
-// 	ok  	github.com/reactivego/channel/test	31.698s
+// 	ok  	github.com/reactivego/multicast/generic/test	31.698s
 //
 // I really had to work hard to get performance to an acceptable level. Started
 // out an order of magnitude slower than native Go, as the amount of contention
@@ -122,7 +122,7 @@
 // 	Mac:test $ go test -run=XXX -bench=FanIn.Go -cpu=1,2,3,4,5,6,7,8
 // 	goos: darwin
 // 	goarch: amd64
-// 	pkg: github.com/reactivego/channel/test
+// 	pkg: github.com/reactivego/multicast/generic/test
 // 	BenchmarkFanIn_Go_Nx1     	20000000	        72.9 ns/op
 // 	BenchmarkFanIn_Go_Nx1-2   	20000000	       115 ns/op
 // 	BenchmarkFanIn_Go_Nx1-3   	20000000	       117 ns/op
@@ -132,7 +132,7 @@
 // 	BenchmarkFanIn_Go_Nx1-7   	10000000	       184 ns/op
 // 	BenchmarkFanIn_Go_Nx1-8   	10000000	       203 ns/op
 // 	PASS
-// 	ok  	github.com/reactivego/channel/test	28.924s
+// 	ok  	github.com/reactivego/multicast/generic/test	28.924s
 //
 // Go natively supports fan-in, so its performance was very good! However, for
 // the higher sender counts the performance drops off quite sharply, whereas our
@@ -150,7 +150,7 @@
 // 	Mac:test $ go test -run=XXX -bench=FanInOut -cpu=1,2,3,4,5,6,7,8
 // 	goos: darwin
 // 	goarch: amd64
-// 	pkg: github.com/reactivego/channel/test
+// 	pkg: github.com/reactivego/multicast/generic/test
 // 	BenchmarkFanInOut_Chan_NxN     	20000000	        77.4 ns/op
 // 	BenchmarkFanInOut_Chan_NxN-2   	20000000	        99.2 ns/op
 // 	BenchmarkFanInOut_Chan_NxN-3   	20000000	       103 ns/op
@@ -160,7 +160,7 @@
 // 	BenchmarkFanInOut_Chan_NxN-7   	20000000	        94.8 ns/op
 // 	BenchmarkFanInOut_Chan_NxN-8   	20000000	        97.8 ns/op
 // 	PASS
-// 	ok  	github.com/reactivego/channel/test	35.091s
-package channel
+// 	ok  	github.com/reactivego/multicast/generic/test	35.091s
+package multicast
 
 type foo interface{}

@@ -1,4 +1,4 @@
-package channel
+package multicast
 
 import (
 	"fmt"

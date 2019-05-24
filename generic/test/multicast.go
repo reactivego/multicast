@@ -15,9 +15,9 @@ import (
 
 //jig:name ChanPadding
 
-const _PADDING = 1	// 0 turns padding off, 1 turns it on.
+const _PADDING = 1 // 0 turns padding off, 1 turns it on.
 
-const _EXTRA_PADDING = 0 * 64	// multiples of 64, benefits inconclusive.
+const _EXTRA_PADDING = 0 * 64 // multiples of 64, benefits inconclusive.
 
 type pad60 [_PADDING * (_EXTRA_PADDING + 60)]byte
 
@@ -33,20 +33,20 @@ type pad32 [_PADDING * (_EXTRA_PADDING + 32)]byte
 
 // Activity of committer
 const (
-	resting	uint32	= iota
+	resting uint32 = iota
 	working
 )
 
 // Activity of endpoints
 const (
-	idling	uint32	= iota
+	idling uint32 = iota
 	enumerating
 	creating
 )
 
 // State of endpoint and channel
 const (
-	active	uint64	= iota
+	active uint64 = iota
 	canceled
 	closed
 )
@@ -69,48 +69,48 @@ const (
 // runtime.Gosched() are used in situations where goroutines are waiting or
 // contending for resources.
 type ChanInt struct {
-	buffer		[]int
-	_________a	pad40
-	begin		uint64
-	_________b	pad56
-	end		uint64
-	_________c	pad56
-	commit		uint64
-	_________d	pad56
-	mod		uint64
-	_________e	pad56
-	endpoints	endpointsInt
+	buffer     []int
+	_________a pad40
+	begin      uint64
+	_________b pad56
+	end        uint64
+	_________c pad56
+	commit     uint64
+	_________d pad56
+	mod        uint64
+	_________e pad56
+	endpoints  endpointsInt
 
-	err		error
-	____________f	pad48
-	channelState	uint64	// active, closed
-	____________g	pad56
+	err           error
+	____________f pad48
+	channelState  uint64 // active, closed
+	____________g pad56
 
-	write			uint64
-	_________________h	pad56
-	start			time.Time
-	_________________i	pad40
-	written			[]int64	// nanoseconds since start
-	_________________j	pad40
-	committerActivity	uint32	// resting, working
-	_________________k	pad60
+	write              uint64
+	_________________h pad56
+	start              time.Time
+	_________________i pad40
+	written            []int64 // nanoseconds since start
+	_________________j pad40
+	committerActivity  uint32 // resting, working
+	_________________k pad60
 
-	receivers		*sync.Cond
-	_________________l	pad56
+	receivers          *sync.Cond
+	_________________l pad56
 }
 
 type endpointsInt struct {
-	entry			[]EndpointInt
-	len			uint32
-	endpointsActivity	uint32	// idling, enumerating, creating
-	________		pad32
+	entry             []EndpointInt
+	len               uint32
+	endpointsActivity uint32 // idling, enumerating, creating
+	________          pad32
 }
 
 //jig:name ErrOutOfEndpoints
 
 type ChannelError string
 
-func (e ChannelError) Error() string	{ return string(e) }
+func (e ChannelError) Error() string { return string(e) }
 
 // ErrOutOfEndpoints is returned by NewEndpoint when the maximum number of
 // endpoints has already been created.
@@ -177,11 +177,11 @@ func NewChanInt(bufferCapacity int, endpointCapacity int) *ChanInt {
 
 	size := uint64(1) << uint(math.Ceil(math.Log2(float64(bufferCapacity))))
 	c := &ChanInt{
-		end:		size,
-		mod:		size - 1,
-		buffer:		make([]int, size),
-		start:		time.Now(),
-		written:	make([]int64, size),
+		end:     size,
+		mod:     size - 1,
+		buffer:  make([]int, size),
+		start:   time.Now(),
+		written: make([]int64, size),
 		endpoints: endpointsInt{
 			entry: make([]EndpointInt, endpointCapacity),
 		},
@@ -191,10 +191,10 @@ func NewChanInt(bufferCapacity int, endpointCapacity int) *ChanInt {
 }
 
 // Lock, empty method so we can pass *ChanInt to sync.NewCond as a Locker.
-func (c *ChanInt) Lock()	{}
+func (c *ChanInt) Lock() {}
 
 // Unlock, empty method so we can pass *ChanInt to sync.NewCond as a Locker.
-func (c *ChanInt) Unlock()	{}
+func (c *ChanInt) Unlock() {}
 
 //jig:name EndpointInt
 
@@ -203,22 +203,15 @@ func (c *ChanInt) Unlock()	{}
 // goroutines.
 type EndpointInt struct {
 	*ChanInt
-	_____________a	pad56
-	cursor		uint64
-	_____________b	pad56
-	endpointState	uint64	// active, canceled, closed
-	_____________c	pad56
-	lastActive	time.Time	// track activity to deterime when to sleep
-	_____________d	pad40
-	endpointClosed	uint64	// active, closed
-	_____________e	pad56
-}
-
-//jig:name ChanIntClosed
-
-// Closed returns true when the channel was closed using the Close method.
-func (c *ChanInt) Closed() bool {
-	return atomic.LoadUint64(&c.channelState) >= closed
+	_____________a pad56
+	cursor         uint64
+	_____________b pad56
+	endpointState  uint64 // active, canceled, closed
+	_____________c pad56
+	lastActive     time.Time // track activity to deterime when to sleep
+	_____________d pad40
+	endpointClosed uint64 // active, closed
+	_____________e pad56
 }
 
 //jig:name ChanIntslideBuffer
@@ -255,36 +248,23 @@ func (c *ChanInt) slideBuffer() bool {
 	return true
 }
 
-//jig:name ChanIntFastSend
+//jig:name ChanIntSend
 
-// FastSend can be used to send values to the channel from a single goroutine.
-// Also, this does not record the time a message was sent, so the maxAge value
-// passed to Range will be ignored.
-func (c *ChanInt) FastSend(value int) {
-	for c.commit == c.end {
+// Send can be used by concurrent goroutines to send values to the channel.
+func (c *ChanInt) Send(value int) {
+	write := atomic.AddUint64(&c.write, 1) - 1
+	for write >= atomic.LoadUint64(&c.end) {
 		if !c.slideBuffer() {
 			return
 		}
 	}
-	c.buffer[c.commit&c.mod] = value
-	atomic.AddUint64(&c.commit, 1)
+	c.buffer[write&c.mod] = value
+	updated := time.Since(c.start).Nanoseconds()
+	if updated == 0 {
+		panic("clock failure; zero duration measured")
+	}
+	atomic.StoreInt64(&c.written[write&c.mod], updated<<1+1)
 	c.receivers.Broadcast()
-}
-
-//jig:name ChanIntNewEndpoint
-
-// NewEndpoint will create a new channel endpoint that can be used to receive
-// from the channel. The argument keep specifies how many entries of the
-// existing channel buffer to keep.
-//
-// After Close is called on the channel, any endpoints created after that
-// will still receive the number of messages as indicated in the keep parameter
-// and then subsequently the close.
-//
-// An endpoint that is canceled or read until it is exhausted (after channel was
-// closed) will be reused by NewEndpoint.
-func (c *ChanInt) NewEndpoint(keep uint64) (*EndpointInt, error) {
-	return c.endpoints.NewForChanInt(c, keep)
 }
 
 //jig:name ChanIntClose
@@ -304,22 +284,42 @@ func (c *ChanInt) Close(err error) {
 	c.receivers.Broadcast()
 }
 
-//jig:name ChanIntSend
+//jig:name ChanIntNewEndpoint
 
-// Send can be used by concurrent goroutines to send values to the channel.
-func (c *ChanInt) Send(value int) {
-	write := atomic.AddUint64(&c.write, 1) - 1
-	for write >= atomic.LoadUint64(&c.end) {
+// NewEndpoint will create a new channel endpoint that can be used to receive
+// from the channel. The argument keep specifies how many entries of the
+// existing channel buffer to keep.
+//
+// After Close is called on the channel, any endpoints created after that
+// will still receive the number of messages as indicated in the keep parameter
+// and then subsequently the close.
+//
+// An endpoint that is canceled or read until it is exhausted (after channel was
+// closed) will be reused by NewEndpoint.
+func (c *ChanInt) NewEndpoint(keep uint64) (*EndpointInt, error) {
+	return c.endpoints.NewForChanInt(c, keep)
+}
+
+//jig:name ChanIntClosed
+
+// Closed returns true when the channel was closed using the Close method.
+func (c *ChanInt) Closed() bool {
+	return atomic.LoadUint64(&c.channelState) >= closed
+}
+
+//jig:name ChanIntFastSend
+
+// FastSend can be used to send values to the channel from a single goroutine.
+// Also, this does not record the time a message was sent, so the maxAge value
+// passed to Range will be ignored.
+func (c *ChanInt) FastSend(value int) {
+	for c.commit == c.end {
 		if !c.slideBuffer() {
 			return
 		}
 	}
-	c.buffer[write&c.mod] = value
-	updated := time.Since(c.start).Nanoseconds()
-	if updated == 0 {
-		panic("clock failure; zero duration measured")
-	}
-	atomic.StoreInt64(&c.written[write&c.mod], updated<<1+1)
+	c.buffer[c.commit&c.mod] = value
+	atomic.AddUint64(&c.commit, 1)
 	c.receivers.Broadcast()
 }
 
