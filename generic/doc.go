@@ -1,9 +1,8 @@
-// Package multicast is a Just-in-time Generics (jig) library. It contains
-// a generic implementation of a special Channel type. This Channel supports
-// multiple concurrent senders and also multicasting to more than one receiver.
-// Additionally code that receives from the channel can specify to receive 
-// only messages younger than a given maximum age. For information about jig,
-// see https://github.com/reactivego/jig/.
+// Package multicast offers a generic implementation of a multicast channel.
+// This channel supports multiple concurrent senders and multicasting to
+// more than one receiver. Additionally code that receives from the channel
+// can specify to receive only messages younger a given maximum age. Install
+// [Generics for Go](https://github.com/reactivego/jig/) to use the library.
 //
 // Unlike native Go channels, messages send to this channel are multicasted to
 // all receivers. A new endpoint created while the channel is operational can
