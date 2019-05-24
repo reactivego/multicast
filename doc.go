@@ -10,9 +10,9 @@
 // This multicast channel is different from other multicast implementations in
 // that it uses only fast synchronization primitives like atomic operations to
 // implement its features. Furthermore, it also doesn't use goroutines internally.
-// This allows it to exhibit a very high performance.
+// This allows it to operate at a very high level of performance.
 //
-// If you are looking for a situation where you need to record and replay a stream
+// If you are in a situation where you need to record and replay a stream
 // of data or need to split a stream of data into multiple identical streams,
 // then this package offers a fast and simple implementation.
 //
