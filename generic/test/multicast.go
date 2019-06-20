@@ -15,9 +15,9 @@ import (
 
 //jig:name ChanPadding
 
-const _PADDING = 1 // 0 turns padding off, 1 turns it on.
+const _PADDING = 1	// 0 turns padding off, 1 turns it on.
 
-const _EXTRA_PADDING = 0 * 64 // multiples of 64, benefits inconclusive.
+const _EXTRA_PADDING = 0 * 64	// multiples of 64, benefits inconclusive.
 
 type pad60 [_PADDING * (_EXTRA_PADDING + 60)]byte
 
@@ -33,20 +33,20 @@ type pad32 [_PADDING * (_EXTRA_PADDING + 32)]byte
 
 // Activity of committer
 const (
-	resting uint32 = iota
+	resting	uint32	= iota
 	working
 )
 
 // Activity of endpoints
 const (
-	idling uint32 = iota
+	idling	uint32	= iota
 	enumerating
 	creating
 )
 
 // State of endpoint and channel
 const (
-	active uint64 = iota
+	active	uint64	= iota
 	canceled
 	closed
 )
@@ -69,48 +69,48 @@ const (
 // runtime.Gosched() are used in situations where goroutines are waiting or
 // contending for resources.
 type ChanInt struct {
-	buffer     []int
-	_________a pad40
-	begin      uint64
-	_________b pad56
-	end        uint64
-	_________c pad56
-	commit     uint64
-	_________d pad56
-	mod        uint64
-	_________e pad56
-	endpoints  endpointsInt
+	buffer		[]int
+	_________a	pad40
+	begin		uint64
+	_________b	pad56
+	end		uint64
+	_________c	pad56
+	commit		uint64
+	_________d	pad56
+	mod		uint64
+	_________e	pad56
+	endpoints	endpointsInt
 
-	err           error
-	____________f pad48
-	channelState  uint64 // active, closed
-	____________g pad56
+	err		error
+	____________f	pad48
+	channelState	uint64	// active, closed
+	____________g	pad56
 
-	write              uint64
-	_________________h pad56
-	start              time.Time
-	_________________i pad40
-	written            []int64 // nanoseconds since start
-	_________________j pad40
-	committerActivity  uint32 // resting, working
-	_________________k pad60
+	write			uint64
+	_________________h	pad56
+	start			time.Time
+	_________________i	pad40
+	written			[]int64	// nanoseconds since start
+	_________________j	pad40
+	committerActivity	uint32	// resting, working
+	_________________k	pad60
 
-	receivers          *sync.Cond
-	_________________l pad56
+	receivers		*sync.Cond
+	_________________l	pad56
 }
 
 type endpointsInt struct {
-	entry             []EndpointInt
-	len               uint32
-	endpointsActivity uint32 // idling, enumerating, creating
-	________          pad32
+	entry			[]EndpointInt
+	len			uint32
+	endpointsActivity	uint32	// idling, enumerating, creating
+	________		pad32
 }
 
 //jig:name ErrOutOfEndpoints
 
 type ChannelError string
 
-func (e ChannelError) Error() string { return string(e) }
+func (e ChannelError) Error() string	{ return string(e) }
 
 // ErrOutOfEndpoints is returned by NewEndpoint when the maximum number of
 // endpoints has already been created.
@@ -164,11 +164,9 @@ func (e *endpointsInt) Access(access func(*endpointsInt)) bool {
 
 //jig:name NewChanInt
 
-// NewChanInt creates a new channel. Use e.g. NewChanInt to create a channel of
-// integer values and use NewChan to create a channel of interface{}. The
-// parameters bufferCapacity and endpointCapacity determine the size of the
-// message buffer and maximum number of concurrent receiving endpoints
-// respectively.
+// NewChanInt creates a new channel. The parameters bufferCapacity and
+// endpointCapacity determine the size of the message buffer and maximum
+// number of concurrent receiving endpoints respectively.
 //
 // Note that bufferCapacity is always scaled up to a power of 2 so e.g.
 // specifying 400 will create a buffer of 512 (2^9). Also because of this a
@@ -177,11 +175,11 @@ func NewChanInt(bufferCapacity int, endpointCapacity int) *ChanInt {
 
 	size := uint64(1) << uint(math.Ceil(math.Log2(float64(bufferCapacity))))
 	c := &ChanInt{
-		end:     size,
-		mod:     size - 1,
-		buffer:  make([]int, size),
-		start:   time.Now(),
-		written: make([]int64, size),
+		end:		size,
+		mod:		size - 1,
+		buffer:		make([]int, size),
+		start:		time.Now(),
+		written:	make([]int64, size),
 		endpoints: endpointsInt{
 			entry: make([]EndpointInt, endpointCapacity),
 		},
@@ -191,10 +189,10 @@ func NewChanInt(bufferCapacity int, endpointCapacity int) *ChanInt {
 }
 
 // Lock, empty method so we can pass *ChanInt to sync.NewCond as a Locker.
-func (c *ChanInt) Lock() {}
+func (c *ChanInt) Lock()	{}
 
 // Unlock, empty method so we can pass *ChanInt to sync.NewCond as a Locker.
-func (c *ChanInt) Unlock() {}
+func (c *ChanInt) Unlock()	{}
 
 //jig:name EndpointInt
 
@@ -203,15 +201,15 @@ func (c *ChanInt) Unlock() {}
 // goroutines.
 type EndpointInt struct {
 	*ChanInt
-	_____________a pad56
-	cursor         uint64
-	_____________b pad56
-	endpointState  uint64 // active, canceled, closed
-	_____________c pad56
-	lastActive     time.Time // track activity to deterime when to sleep
-	_____________d pad40
-	endpointClosed uint64 // active, closed
-	_____________e pad56
+	_____________a	pad56
+	cursor		uint64
+	_____________b	pad56
+	endpointState	uint64	// active, canceled, closed
+	_____________c	pad56
+	lastActive	time.Time	// track activity to deterime when to sleep
+	_____________d	pad40
+	endpointClosed	uint64	// active, closed
+	_____________e	pad56
 }
 
 //jig:name ChanIntslideBuffer

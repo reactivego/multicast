@@ -23,7 +23,7 @@
 // transmitting int values to multiple receivers where messages are multicasted
 // so every receiver receives the same set of messages performs as follows:
 //
-// 	Mac:test $ go test -run=XXX -bench=FanOut.Chan -cpu=1,2,3,4,5,6,7,8
+// 	$ go test -run=XXX -bench=FanOut.Chan -cpu=1,2,3,4,5,6,7,8
 // 	goos: darwin
 // 	goarch: amd64
 // 	pkg: github.com/reactivego/multicast/generic/test
@@ -45,7 +45,7 @@
 // channels. Since Go doesn't support multicasting to multiple receivers from
 // a single channel. Our multiple channels assembly gives the following result:
 //
-// 	Mac:test $ go test -run=XXX -bench=FanOut.Go -cpu=1,2,3,4,5,6,7,8
+// 	$ go test -run=XXX -bench=FanOut.Go -cpu=1,2,3,4,5,6,7,8
 // 	goos: darwin
 // 	goarch: amd64
 // 	pkg: github.com/reactivego/multicast/generic/test
@@ -69,7 +69,7 @@
 // transmitting int values to a single receiver. Messages are merged in
 // arbitrary order and all delivered to the receiver.
 //
-// 	Mac:test $ go test -run=XXX -bench=FanIn.Chan -cpu=1,2,3,4,5,6,7,8
+// 	$ go test -run=XXX -bench=FanIn.Chan -cpu=1,2,3,4,5,6,7,8
 // 	goos: darwin
 // 	goarch: amd64
 // 	pkg: github.com/reactivego/multicast/generic/test
@@ -99,7 +99,7 @@
 // The results for Go for 1 to 8 concurrent senders and a single receiver are
 // as follows:
 //
-// 	Mac:test $ go test -run=XXX -bench=FanIn.Go -cpu=1,2,3,4,5,6,7,8
+// 	$ go test -run=XXX -bench=FanIn.Go -cpu=1,2,3,4,5,6,7,8
 // 	goos: darwin
 // 	goarch: amd64
 // 	pkg: github.com/reactivego/multicast/generic/test
@@ -127,7 +127,7 @@
 // on the channel. The streams of messages are merged into a single stream which
 // is then multicasted to N concurrent receivers.
 //
-// 	Mac:test $ go test -run=XXX -bench=FanInOut -cpu=1,2,3,4,5,6,7,8
+// 	$ go test -run=XXX -bench=FanInOut -cpu=1,2,3,4,5,6,7,8
 // 	goos: darwin
 // 	goarch: amd64
 // 	pkg: github.com/reactivego/multicast/generic/test

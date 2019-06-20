@@ -132,11 +132,9 @@ type EndpointFoo struct {
 //jig:template NewChan<Foo>
 //jig:needs Chan<Foo>, endpoints<Foo>
 
-// NewChanFoo creates a new channel. Use e.g. NewChanInt to create a channel of
-// integer values and use NewChan to create a channel of interface{}. The
-// parameters bufferCapacity and endpointCapacity determine the size of the
-// message buffer and maximum number of concurrent receiving endpoints
-// respectively.
+// NewChanFoo creates a new channel. The parameters bufferCapacity and
+// endpointCapacity determine the size of the message buffer and maximum
+// number of concurrent receiving endpoints respectively.
 //
 // Note that bufferCapacity is always scaled up to a power of 2 so e.g.
 // specifying 400 will create a buffer of 512 (2^9). Also because of this a
@@ -194,6 +192,10 @@ func (c *ChanFoo) Closed() bool {
 // FastSend can be used to send values to the channel from a single goroutine.
 // Also, this does not record the time a message was sent, so the maxAge value
 // passed to Range will be ignored.
+//
+// Note, that when the number of unread messages has reached bufferCapacity, then
+// the call to FastSend will block until the slowest Endpoint has read another
+// message.
 func (c *ChanFoo) FastSend(value foo) {
 	for c.commit == c.end {
 		if !c.slideBuffer() {
@@ -209,6 +211,10 @@ func (c *ChanFoo) FastSend(value foo) {
 //jig:needs endpoints<Foo>, Chan<Foo> slideBuffer
 
 // Send can be used by concurrent goroutines to send values to the channel.
+//
+// Note, that when the number of unread messages has reached bufferCapacity, then
+// the call to Send will block until the slowest Endpoint has read another
+// message.
 func (c *ChanFoo) Send(value foo) {
 	write := atomic.AddUint64(&c.write, 1) - 1
 	for write >= atomic.LoadUint64(&c.end) {

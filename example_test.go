@@ -2,8 +2,8 @@ package multicast
 
 import "fmt"
 
-// Example uses all the functionality that we want to export for this channel
-// package.
+// Example uses all the functionality that we want to export for this
+// multicast package.
 func Example() {
 	ch := NewChan(128, 1)
 	if true {

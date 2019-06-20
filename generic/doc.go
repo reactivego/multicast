@@ -1,4 +1,4 @@
-// Package multicast offers a generic implementation of a multicast channel.
+// Package multicast implements a generic multicast channel.
 // This channel supports multiple concurrent senders and multicasting to
 // more than one receiver. Additionally, code that receives from the channel
 // can specify to receive only messages younger than a given maximum age.
