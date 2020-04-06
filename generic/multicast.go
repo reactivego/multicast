@@ -189,7 +189,7 @@ func (c *ChanFoo) Closed() bool {
 //jig:template Chan<Foo> FastSend
 //jig:needs endpoints<Foo>, Chan<Foo> slideBuffer
 
-// FastSend can be used to send values to the channel from a single goroutine.
+// FastSend can be used to send values to the channel from a SINGLE goroutine.
 // Also, this does not record the time a message was sent, so the maxAge value
 // passed to Range will be ignored.
 //

@@ -248,9 +248,13 @@ func (c *Chan) slideBuffer() bool {
 
 //jig:name ChanFastSend
 
-// FastSend can be used to send values to the channel from a single goroutine.
+// FastSend can be used to send values to the channel from a SINGLE goroutine.
 // Also, this does not record the time a message was sent, so the maxAge value
 // passed to Range will be ignored.
+//
+// Note, that when the number of unread messages has reached bufferCapacity, then
+// the call to FastSend will block until the slowest Endpoint has read another
+// message.
 func (c *Chan) FastSend(value interface{}) {
 	for c.commit == c.end {
 		if !c.slideBuffer() {
@@ -265,6 +269,10 @@ func (c *Chan) FastSend(value interface{}) {
 //jig:name ChanSend
 
 // Send can be used by concurrent goroutines to send values to the channel.
+//
+// Note, that when the number of unread messages has reached bufferCapacity, then
+// the call to Send will block until the slowest Endpoint has read another
+// message.
 func (c *Chan) Send(value interface{}) {
 	write := atomic.AddUint64(&c.write, 1) - 1
 	for write >= atomic.LoadUint64(&c.end) {

@@ -3,7 +3,8 @@ package multicast
 import "fmt"
 
 // Example uses all the functionality that we want to export for this
-// multicast package.
+// multicast package. It guides the generation of the implementation
+// by jig.
 func Example() {
 	ch := NewChan(128, 1)
 	if true {
