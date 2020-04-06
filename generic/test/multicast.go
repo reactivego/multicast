@@ -212,6 +212,22 @@ type EndpointInt struct {
 	_____________e	pad56
 }
 
+//jig:name ChanIntNewEndpoint
+
+// NewEndpoint will create a new channel endpoint that can be used to receive
+// from the channel. The argument keep specifies how many entries of the
+// existing channel buffer to keep.
+//
+// After Close is called on the channel, any endpoints created after that
+// will still receive the number of messages as indicated in the keep parameter
+// and then subsequently the close.
+//
+// An endpoint that is canceled or read until it is exhausted (after channel was
+// closed) will be reused by NewEndpoint.
+func (c *ChanInt) NewEndpoint(keep uint64) (*EndpointInt, error) {
+	return c.endpoints.NewForChanInt(c, keep)
+}
+
 //jig:name ChanIntslideBuffer
 
 func (c *ChanInt) slideBuffer() bool {
@@ -249,6 +265,10 @@ func (c *ChanInt) slideBuffer() bool {
 //jig:name ChanIntSend
 
 // Send can be used by concurrent goroutines to send values to the channel.
+//
+// Note, that when the number of unread messages has reached bufferCapacity, then
+// the call to Send will block until the slowest Endpoint has read another
+// message.
 func (c *ChanInt) Send(value int) {
 	write := atomic.AddUint64(&c.write, 1) - 1
 	for write >= atomic.LoadUint64(&c.end) {
@@ -282,22 +302,6 @@ func (c *ChanInt) Close(err error) {
 	c.receivers.Broadcast()
 }
 
-//jig:name ChanIntNewEndpoint
-
-// NewEndpoint will create a new channel endpoint that can be used to receive
-// from the channel. The argument keep specifies how many entries of the
-// existing channel buffer to keep.
-//
-// After Close is called on the channel, any endpoints created after that
-// will still receive the number of messages as indicated in the keep parameter
-// and then subsequently the close.
-//
-// An endpoint that is canceled or read until it is exhausted (after channel was
-// closed) will be reused by NewEndpoint.
-func (c *ChanInt) NewEndpoint(keep uint64) (*EndpointInt, error) {
-	return c.endpoints.NewForChanInt(c, keep)
-}
-
 //jig:name ChanIntClosed
 
 // Closed returns true when the channel was closed using the Close method.
@@ -307,9 +311,13 @@ func (c *ChanInt) Closed() bool {
 
 //jig:name ChanIntFastSend
 
-// FastSend can be used to send values to the channel from a single goroutine.
+// FastSend can be used to send values to the channel from a SINGLE goroutine.
 // Also, this does not record the time a message was sent, so the maxAge value
 // passed to Range will be ignored.
+//
+// Note, that when the number of unread messages has reached bufferCapacity, then
+// the call to FastSend will block until the slowest Endpoint has read another
+// message.
 func (c *ChanInt) FastSend(value int) {
 	for c.commit == c.end {
 		if !c.slideBuffer() {
