@@ -2,7 +2,7 @@
 // This channel supports multiple concurrent senders and multicasting to
 // more than one receiver. Additionally, code that receives from the channel
 // can specify to receive only messages younger than a given maximum age.
-// Install Generics for Go (https://github.com/reactivego/jig/) to use the
+// Install Generics for Go (https://github.com/reactivego/generics) to use the
 // library.
 //
 // Unlike native Go channels, messages send to this channel are multicasted to
