@@ -50,8 +50,8 @@ replacing the place-holder type with "interface{}" a heterogeneous Chan type
 is created. To regenerate this channel implementation, run jig inside this
 package directory:
 
-	go get -d github.com/reactivego/jig
-	go run github.com/reactivego/jig -rv
+	go get -d github.com/reactivego/generics/cmd/jig
+	go run github.com/reactivego/generics/cmd/jig -v
 */
 package multicast
 
