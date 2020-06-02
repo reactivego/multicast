@@ -2,7 +2,8 @@
 
     import "github.com/reactivego/multicast/test"
 
-[![](https://godoc.org/github.com/reactivego/multicast/test?status.png)](http://godoc.org/github.com/reactivego/multicast/test)
+[![](../svg/godev.svg)](https://pkg.go.dev/github.com/reactivego/multicast/test?tab=doc)
+[![](../svg/godoc.svg)](http://godoc.org/github.com/reactivego/multicast/test)
 
 Package `test` provides examples, tests and benchmarks for the multicast channel (specialized on type int).
 
