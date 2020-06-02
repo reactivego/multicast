@@ -63,22 +63,16 @@ func Example_send2x2() {
 	// Send suppports multiple goroutine sending and stores a timestamp with
 	// every message sent.
 
-	var wg sync.WaitGroup
-	wg.Add(2)
+	var wgs sync.WaitGroup
+	wgs.Add(2)
 	go func() {
 		ch.Send("Hello")
-		wg.Done()
+		wgs.Done()
 	}()
 	go func() {
 		ch.Send("World!")
-		wg.Done()
+		wgs.Done()
 	}()
-	wg.Wait()
-	ch.Close(nil)
-
-	if ch.Closed() {
-		fmt.Println("channel closed")
-	}
 
 	print := func(value interface{}, err error, closed bool) bool {
 		switch {
@@ -92,26 +86,33 @@ func Example_send2x2() {
 		return true
 	}
 
-	wg.Add(2)
+	var wgr sync.WaitGroup
+	wgr.Add(2)
 	ep1, _ := ch.NewEndpoint(multicast.ReplayAll)
 	go func() {
 		ep1.Range(print, 0)
-		wg.Done()
+		wgr.Done()
 	}()
 
 	ep2, _ := ch.NewEndpoint(multicast.ReplayAll)
 	go func() {
 		ep2.Range(print, 0)
-		wg.Done()
+		wgr.Done()
 	}()
-	wg.Wait()
+
+	wgs.Wait()
+	ch.Close(nil)
+	if ch.Closed() {
+		fmt.Println("channel closed")
+	}
+	wgr.Wait()
 
 	// Unordered Output:
+	// Hello
+	// Hello
+	// World!
+	// World!
+	// closed
+	// closed
 	// channel closed
-	// Hello
-	// Hello
-	// World!
-	// World!
-	// closed
-	// closed
 }
