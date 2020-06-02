@@ -9,11 +9,14 @@ import (
 	"time"
 )
 
-//jig:template ErrOutOfEndpoints
+//jig:template ChannelError
 
 type ChannelError string
 
 func (e ChannelError) Error() string { return string(e) }
+
+//jig:template ErrOutOfEndpoints
+//jig:needs ChannelError
 
 // ErrOutOfEndpoints is returned by NewEndpoint when the maximum number of
 // endpoints has already been created.
@@ -324,7 +327,7 @@ func (e *endpointsFoo) NewForChanFoo(c *ChanFoo, keep uint64) (*EndpointFoo, err
 	}
 	defer atomic.StoreUint32(&e.endpointsActivity, idling)
 	var start uint64
-	commit := atomic.LoadUint64(&c.commit)
+	commit := c.commitData()
 	begin := atomic.LoadUint64(&c.begin)
 	if commit-begin <= keep {
 		start = begin
@@ -366,10 +369,11 @@ func (e *endpointsFoo) Access(access func(*endpointsFoo)) bool {
 //jig:needs Endpoint<Foo>
 
 // Range will call the passed in foreach function with all the messages in
-// the buffer, followed by all the messages received. When the foreach
-// function returns true Range will continue, when you return false this is the
-// same as calling Cancel. When canceled the foreach will never be called again.
-// Passing a maxAge duration will skip messages that are older than maxAge.
+// the buffer, followed by all the messages received. When the foreach function
+// returns true Range will continue, when you return false this is the same as
+// calling Cancel. When canceled the foreach will never be called again.
+// Passing a maxAge duration other than 0 will skip messages that are older
+// than maxAge.
 //
 // When the channel is closed, eventually when the buffer is exhausted the close
 // with optional error will be notified by calling foreach one last time with
