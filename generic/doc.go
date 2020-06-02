@@ -1,9 +1,9 @@
-// Package multicast implements a generic multicast channel.
-// This channel supports multiple concurrent senders and multicasting to
-// more than one receiver. Additionally, code that receives from the channel
-// can specify to receive only messages younger than a given maximum age.
-// Install Generics for Go (https://github.com/reactivego/generics) to use the
-// library.
+// Package multicast provides generic MxN multicast channels for Go with
+// buffering and time based buffer eviction. It can be fed by multiple
+// concurrent senders. It multicasts and replays messages to multiple
+// concurrent receivers.
+//
+// Install the jig tool (https://github.com/reactivego/jig) to use the library.
 //
 // Unlike native Go channels, messages send to this channel are multicasted to
 // all receivers. A new endpoint created while the channel is operational can
@@ -17,13 +17,14 @@
 // Since this is a generics library, the way in which a channel is created will
 // determine strong or weak typing. Channels can be strongly typed by specifying
 // an explicit type, for example:
+//
 //	NewChanInt(128,8)
 //	NewChanString(128,8)
 //
 // Or alternatively you can send heterogeneous messages on an interface{} typed
 // channel created as follows:
-//	 NewChan(128,8)
 //
+//	 NewChan(128,8)
 package multicast
 
 type foo interface{}

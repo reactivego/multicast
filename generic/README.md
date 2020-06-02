@@ -2,6 +2,10 @@
 
     import "github.com/reactivego/multicast/generic"
 
-[![](https://godoc.org/github.com/reactivego/multicast/generic?status.png)](http://godoc.org/github.com/reactivego/multicast/generic)
+[![](svg/godev.svg)](https://pkg.go.dev/github.com/reactivego/multicast/generic?tab=doc)
+[![](svg/godoc.svg)](https://godoc.org/github.com/reactivego/multicast/generic)
 
-Package `multicast` implements a generic multicast channel. This channel supports multiple concurrent senders and multicasting to more than one receiver. Additionally, code that receives from the channel can specify to receive only messages younger than a given maximum age. Install the jig tool from [Generics for Go](https://github.com/reactivego/generics) to use the library.
+Package `multicast` provides generic MxN multicast channels for Go with buffering and time based buffer eviction.
+It can be fed by multiple concurrent senders. It multicasts and replays messages to multiple concurrent receivers.
+
+Install the [jig tool](https://github.com/reactivego/jig) to use the library.
