@@ -42,7 +42,7 @@ receiving values of mixed type:
 	ch.Send(1.6180)
 	ch.Close(nil)
 
-Generics for Go
+Regenerating this Package
 
 The implementation in this package is generated from a generic implementation
 of the Chan type found in the subdirectory "generic" inside this package. By
